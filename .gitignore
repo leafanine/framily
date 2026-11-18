@@ -1,0 +1,10 @@
+# local tooling / session state
+.commandcode/
+
+# personal documents - keep out of public deploys
+suchibhas_nanda_resume_fi.docx.pdf
+
+# OS noise
+.DS_Store
+Thumbs.db
+desktop.ini

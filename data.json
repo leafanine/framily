@@ -1,0 +1,124 @@
+{
+  "_help": [
+    "Everything visible on the site comes from this file. Edit, save, refresh - no build step.",
+    "Array order is display order. Add or remove sections freely; 'layout' picks the renderer: text | links | projects | posts | now.",
+    "Set \"hidden\": true on any section or item to hide it without deleting it.",
+    "Journal entries without a \"date\" render as a single line (used for the blog index link).",
+    "Profile: avatar falls back to initials if the image fails. Leave \"avatar\" empty to hide it.",
+    "If the page shows an error card, serve the folder over HTTP (py -m http.server 8000) - browsers block local file reads."
+  ],
+
+  "meta": {
+    "title": "Suchibhas Nanda // the wired",
+    "description": "Present day, present time. Full-stack engineer, backend-leaning. Projects, links and notes by Suchibhas Nanda.",
+    "accent": "#ff3b3b",
+    "lang": "en",
+    "updated": "2026-11-17"
+  },
+
+  "profile": {
+    "name": "Suchibhas Nanda",
+    "handle": "@leafanine",
+    "pronouns": "",
+    "status": "online",
+    "tagline": "Present day, present time. Full-stack engineer, backend-leaning - compliance-heavy fintech on one screen, compilers and small strange things on the other.",
+    "avatar": "https://github.com/leafanine.png"
+  },
+
+  "sections": [
+    {
+      "id": "about",
+      "label": "about",
+      "title": "About",
+      "layout": "text",
+      "note": "cat about.md",
+      "items": [
+        { "type": "p", "text": "I'm a full-stack engineer, backend-leaning - most at home in the part of the stack where data models, permissions and business rules actually live. Lately that has meant compliance-heavy fintech: KYC, FATCA/CRS and multi-party onboarding on FastAPI, PostgreSQL and React/Next.js." },
+        { "type": "p", "text": "Before that: a B.Tech in Computer Science from GIT Bhubaneswar, a compiler for an 8-bit CPU written in C, and an Odia speech pipeline that grew into a translation tool for English and Chinese." },
+        { "type": "p", "text": "Away from work I break things on purpose - hardware, emulators, this website - and write down whatever survives." }
+      ]
+    },
+
+    {
+      "id": "projects",
+      "label": "projects",
+      "title": "Projects",
+      "layout": "projects",
+      "note": "ls projects/",
+      "items": [
+        {
+          "name": "SimpleLang 8-bit compiler",
+          "desc": "a compiler for an 8-bit CPU: lexer, semantic analyzer and code generation written in C. understands declarations, datatypes and simple operations.",
+          "url": "https://github.com/leafanine/SimpleLang_8bit_compiler",
+          "tags": ["c"]
+        },
+        {
+          "name": "Regional language translation",
+          "desc": "Odia speech and text to English and Chinese. Wav2Vec2 fine-tune for Odia transcription, IndicTrans2 for translation, Streamlit for the UI.",
+          "tags": ["python", "ml"]
+        },
+        {
+          "name": "Questify",
+          "desc": "quest-based tasks, levels, rewards and ranks. closed beta with 100 users; 45 of them said gamification made them more compelled to finish things.",
+          "tags": ["product"]
+        }
+      ]
+    },
+
+    {
+      "id": "journal",
+      "label": "journal",
+      "title": "Journal",
+      "layout": "posts",
+      "note": "tail -n 4 journal.log",
+      "items": [
+        { "title": "nlog - everything I write", "url": "https://nlog.leafanine.xyz" }
+      ]
+    },
+
+    {
+      "id": "links",
+      "label": "links",
+      "title": "Links",
+      "layout": "links",
+      "note": "cat contacts.txt",
+      "items": [
+        { "label": "nlog", "url": "https://nlog.leafanine.xyz", "note": "blog" },
+        { "label": "github", "url": "https://github.com/leafanine", "note": "code" },
+        { "label": "email", "url": "mailto:nandasuchivas@gmail.com", "note": "mail" }
+      ]
+    },
+
+    {
+      "id": "now",
+      "label": "now",
+      "title": "Now",
+      "layout": "now",
+      "note": "uptime",
+      "items": [
+        { "label": "role", "value": "full-stack engineer (backend-leaning)" },
+        { "label": "building", "value": "this site, and a compiler that refuses to be finished" },
+        { "label": "stack", "value": "FastAPI · PostgreSQL · Next.js" },
+        { "label": "location", "value": "the wired" },
+        { "label": "updated", "value": "2026-11-17" }
+      ]
+    },
+
+    {
+      "id": "contact",
+      "label": "contact",
+      "title": "Contact",
+      "layout": "links",
+      "note": "ping -c 1",
+      "intro": "Email is the only reliable channel. I answer slowly, but I answer.",
+      "items": [
+        { "label": "nandasuchivas@gmail.com", "url": "mailto:nandasuchivas@gmail.com", "note": "mail" }
+      ]
+    }
+  ],
+
+  "footer": {
+    "quote": "Close the world, open the nExt.",
+    "note": "thanks for visiting"
+  }
+}
