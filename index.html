@@ -152,6 +152,44 @@ blockquote{margin:0 0 14px;padding:6px 0 6px 14px;border-left:2px solid #3a2023;
 .now dt{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#565a61;padding-top:2px}
 .now dd{margin:0;color:#c9c9cc}
 
+/* audio deck */
+.deck{
+  position:relative;display:grid;grid-template-columns:88px minmax(0,1fr);gap:16px 18px;
+  padding:16px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.015),transparent);
+}
+.deck::before,.deck::after{content:"";position:absolute;width:9px;height:9px;border-style:solid;border-color:var(--accent);opacity:.5}
+.deck::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+.deck::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+.deck-art{position:relative;width:88px;height:88px;border:1px solid #2b2e34;background:#0a0b0e;overflow:hidden}
+.deck-art img{width:100%;height:100%;object-fit:cover;display:block;filter:grayscale(1) contrast(1.35) brightness(.9);transition:filter .35s ease}
+.deck:hover .deck-art img{filter:grayscale(.3) contrast(1.15) brightness(.95)}
+.deck-art::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.35) 2px 3px),
+             radial-gradient(100% 100% at 50% 50%,transparent 42%,rgba(0,0,0,.5) 100%);
+}
+.deck-glyph{position:absolute;inset:0;display:grid;place-items:center;color:#2f333a;font-size:20px}
+.deck-info{min-width:0}
+.deck-label{margin:0 0 6px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#565a61}
+.deck-track{margin:0;font-size:15px;font-weight:600;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deck-artist{margin:2px 0 0;font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.deck-bar{position:relative;height:3px;margin:14px 0 7px;background:#1b1e22}
+.deck-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent)}
+.deck-cursor{position:absolute;top:-4px;left:0;width:3px;height:11px;background:var(--accent);transform:translateX(-50%);box-shadow:0 0 9px rgba(255,59,59,.55)}
+.deck-meta{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:#565a61}
+.deck-meta a{border-bottom:1px dotted #3f444a}
+.deck-meta a:hover{color:var(--accent);border-color:var(--accent)}
+.deck[data-state="idle"] .deck-track,.deck[data-state="idle"] .deck-artist{color:#565a61}
+.deck[data-state="idle"] .deck-art img{opacity:.45}
+.deck-vu{grid-column:1/-1;display:flex;align-items:flex-end;gap:2px;height:14px}
+.deck-vu i{flex:0 0 3px;height:15%;background:var(--accent);opacity:.35}
+.deck[data-state="playing"] .deck-vu i{opacity:.8;animation:vu 780ms ease-in-out infinite alternate}
+.deck-vu i:nth-child(2n){animation-delay:-160ms}
+.deck-vu i:nth-child(3n){animation-duration:620ms}
+.deck-vu i:nth-child(4n){animation-delay:-300ms}
+.deck-vu i:nth-child(5n){animation-duration:940ms}
+@keyframes vu{from{height:12%}to{height:100%}}
+
 /* ---------- footer ---------- */
 .foot{border-top:1px solid var(--line);margin-top:24px;padding:24px 0 48px;font-size:12px;color:#6a6e75}
 .foot .eof{margin:0 0 14px;letter-spacing:.16em;color:var(--fg)}
@@ -202,6 +240,7 @@ blockquote{margin:0 0 14px;padding:6px 0 6px 14px;border-left:2px solid #3a2023;
   html{scroll-behavior:auto}
   .boot pre::after,.caret,.rec::before,.skeleton{animation:none}
   .glitch::before,.glitch::after{animation:none !important;opacity:0 !important}
+  .deck[data-state="playing"] .deck-vu i{animation:none;height:45%}
   .nav{backdrop-filter:none}
 }
 @media (max-width:640px){
@@ -213,6 +252,8 @@ blockquote{margin:0 0 14px;padding:6px 0 6px 14px;border-left:2px solid #3a2023;
   .log time{grid-column:1;font-size:11px}
   .log .title{grid-column:1}
   .now{grid-template-columns:96px minmax(0,1fr)}
+  .deck{grid-template-columns:64px minmax(0,1fr);padding:14px}
+  .deck-art{width:64px;height:64px}
   .layer-head .cmd{display:none}
   .statusline{font-size:9px;padding-left:14px;padding-right:14px}
 }
@@ -505,13 +546,229 @@ blockquote{margin:0 0 14px;padding:6px 0 6px 14px;border-left:2px solid #3a2023;
     return dl;
   }
 
+  /* ---------------- audio deck ---------------- */
+
+  var audioTimer = null;
+  var audioPoll = null;
+
+  function audioBody() {
+    var deck = el("div", "deck");
+    deck.setAttribute("data-state", "loading");
+
+    var art = el("div", "deck-art");
+    var img = el("img");
+    img.alt = "";
+    img.hidden = true;
+    var glyph = el("span", "deck-glyph", "\u25a0");
+    glyph.setAttribute("aria-hidden", "true");
+    art.appendChild(img);
+    art.appendChild(glyph);
+
+    var info = el("div", "deck-info");
+    var label = el("p", "deck-label", "> linking\u2026");
+    var track = el("p", "deck-track", "\u2014");
+    var artist = el("p", "deck-artist", "\u2014");
+
+    var bar = el("div", "deck-bar");
+    bar.setAttribute("role", "progressbar");
+    bar.setAttribute("aria-label", "track progress");
+    bar.setAttribute("aria-valuemin", "0");
+    bar.setAttribute("aria-valuemax", "100");
+    bar.setAttribute("aria-valuenow", "0");
+    bar.appendChild(el("span", "deck-fill"));
+    bar.appendChild(el("span", "deck-cursor"));
+
+    var meta = el("div", "deck-meta");
+    var time = el("span", "deck-time", "0:00 / 0:00");
+    var state = el("span", "deck-state", "\u2014");
+    var openLink = el("a", "deck-open", "open \u2197");
+    openLink.hidden = true;
+    openLink.rel = "noopener noreferrer";
+    meta.appendChild(time);
+    meta.appendChild(state);
+    meta.appendChild(openLink);
+
+    info.appendChild(label);
+    info.appendChild(track);
+    info.appendChild(artist);
+    info.appendChild(bar);
+    info.appendChild(meta);
+
+    var vu = el("div", "deck-vu");
+    vu.setAttribute("aria-hidden", "true");
+    for (var i = 0; i < 14; i++) vu.appendChild(el("i"));
+
+    deck.appendChild(art);
+    deck.appendChild(info);
+    deck.appendChild(vu);
+    return deck;
+  }
+
+  function stopAudio() {
+    if (audioTimer) { clearInterval(audioTimer); audioTimer = null; }
+    audioPoll = null;
+  }
+
+  function startAudio() {
+    stopAudio();
+    var deck = document.querySelector(".deck");
+    if (!deck) return;
+
+    var img = deck.querySelector(".deck-art img");
+    var glyph = deck.querySelector(".deck-glyph");
+    var label = deck.querySelector(".deck-label");
+    var trackEl = deck.querySelector(".deck-track");
+    var artistEl = deck.querySelector(".deck-artist");
+    var bar = deck.querySelector(".deck-bar");
+    var fill = deck.querySelector(".deck-fill");
+    var cursor = deck.querySelector(".deck-cursor");
+    var timeEl = deck.querySelector(".deck-time");
+    var stateEl = deck.querySelector(".deck-state");
+    var openLink = deck.querySelector(".deck-open");
+
+    var base = { progress: 0, duration: 0, at: Date.now(), playing: false };
+
+    function fmt(ms) {
+      var total = Math.max(0, Math.floor((ms || 0) / 1000));
+      return Math.floor(total / 60) + ":" + pad(total % 60);
+    }
+
+    function setArt(url) {
+      if (url) {
+        img.src = url;
+        img.hidden = false;
+        glyph.hidden = true;
+      } else {
+        img.removeAttribute("src");
+        img.hidden = true;
+        glyph.hidden = false;
+      }
+    }
+
+    function setLink(url) {
+      if (url) {
+        openLink.href = url;
+        openLink.hidden = false;
+      } else {
+        openLink.removeAttribute("href");
+        openLink.hidden = true;
+      }
+    }
+
+    function resetBar() {
+      fill.style.width = "0%";
+      cursor.style.left = "0%";
+      timeEl.textContent = "0:00 / 0:00";
+      bar.setAttribute("aria-valuenow", "0");
+    }
+
+    function paint() {
+      var elapsed = base.playing ? Date.now() - base.at : 0;
+      var progress = base.progress + elapsed;
+      if (base.duration > 0) progress = Math.min(progress, base.duration);
+      var pct = base.duration > 0 ? Math.min(100, (progress / base.duration) * 100) : 0;
+      fill.style.width = pct + "%";
+      cursor.style.left = pct + "%";
+      timeEl.textContent = fmt(progress) + " / " + fmt(base.duration);
+      bar.setAttribute("aria-valuenow", String(Math.round(pct)));
+    }
+
+    function apply(payload) {
+      if (payload && payload.track) {
+        var track = payload.track;
+        deck.setAttribute("data-state", payload.playing ? "playing" : "paused");
+        label.textContent = "> now playing";
+        trackEl.textContent = track.title || "\u2014";
+        trackEl.title = track.title || "";
+        artistEl.textContent = [track.artists, track.album].filter(Boolean).join(" \u00b7 ") || "\u2014";
+        artistEl.title = artistEl.textContent;
+        base.progress = track.progressMs || 0;
+        base.duration = track.durationMs || 0;
+        base.at = Date.now();
+        base.playing = Boolean(payload.playing);
+        stateEl.textContent = payload.playing ? "\u25cf playing" : "\u25a0 paused";
+        setArt(track.art);
+        setLink(track.url);
+        paint();
+        return;
+      }
+
+      if (payload && payload.last) {
+        var last = payload.last;
+        deck.setAttribute("data-state", "idle");
+        label.textContent = "> last transmission";
+        trackEl.textContent = last.title || "\u2014";
+        trackEl.title = last.title || "";
+        artistEl.textContent = last.artists || "\u2014";
+        artistEl.title = artistEl.textContent;
+        stateEl.textContent = "no signal";
+        base.playing = false;
+        base.progress = 0;
+        base.duration = 0;
+        setArt(last.art);
+        setLink(last.url);
+        resetBar();
+        return;
+      }
+
+      deck.setAttribute("data-state", "idle");
+      label.textContent = "> now playing";
+      trackEl.textContent = "no signal";
+      trackEl.title = "";
+      artistEl.textContent = "\u2014";
+      stateEl.textContent = "\u2014";
+      base.playing = false;
+      base.progress = 0;
+      base.duration = 0;
+      setArt(null);
+      setLink(null);
+      resetBar();
+    }
+
+    function poll() {
+      fetch("/api/now-playing", { cache: "no-store", headers: { Accept: "application/json" } })
+        .then(function (res) {
+          if (!res.ok) throw new Error("HTTP " + res.status);
+          return res.json();
+        })
+        .then(apply)
+        .catch(function () { apply(null); });
+    }
+
+    audioTimer = setInterval(paint, 1000);
+
+    if (/(^|[?&])demo(=|&|$)/.test(location.search)) {
+      apply({
+        playing: true,
+        track: {
+          title: "demo track \u2014 replace with your spotify",
+          artists: "placeholder artist",
+          album: "preview reel",
+          durationMs: 214000,
+          progressMs: 48000,
+          art: null,
+          url: null
+        }
+      });
+      return;
+    }
+
+    audioPoll = poll;
+    poll();
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden && audioPoll) audioPoll();
+  });
+
   var layouts = {
     text: textBody,
     links: linksBody,
     projects: projectsBody,
     posts: postsBody,
     now: factsBody,
-    facts: factsBody
+    facts: factsBody,
+    audio: audioBody
   };
 
   /* ---------------- page render ---------------- */
@@ -675,11 +932,13 @@ blockquote{margin:0 0 14px;padding:6px 0 6px 14px;border-left:2px solid #3a2023;
     renderNav(sections);
     renderSections(sections);
     watchSections();
+    startAudio();
 
     if (!sections.length) console.warn("[wired] data.json has no visible sections");
   }
 
   function renderError(error) {
+    stopAudio();
     var host = $("#layers");
     host.textContent = "";
     $("#nav-links").textContent = "";

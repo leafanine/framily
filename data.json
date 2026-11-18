@@ -1,7 +1,7 @@
 {
   "_help": [
     "Everything visible on the site comes from this file. Edit, save, refresh - no build step.",
-    "Array order is display order. Add or remove sections freely; 'layout' picks the renderer: text | links | projects | posts | now.",
+    "Array order is display order. Add or remove sections freely; 'layout' picks the renderer: text | links | projects | posts | now | audio.",
     "Set \"hidden\": true on any section or item to hide it without deleting it.",
     "Journal entries without a \"date\" render as a single line (used for the blog index link).",
     "Profile: avatar falls back to initials if the image fails. Leave \"avatar\" empty to hide it.",
@@ -102,6 +102,14 @@
         { "label": "location", "value": "the wired" },
         { "label": "updated", "value": "2026-11-17" }
       ]
+    },
+
+    {
+      "id": "audio",
+      "label": "audio",
+      "title": "Audio",
+      "layout": "audio",
+      "note": "tail -f playback.log"
     },
 
     {
